@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Periodic Table: Lewis Structures and Bohr Models</title>
+  <style>
+    :root {
+      --bg: #f3efe5;
+      --panel: #fffaf0;
+      --ink: #1d2a38;
+      --muted: #5d6b78;
+      --accent: #bf5b04;
+      --accent-soft: #f3c48b;
+      --line: #d8c9ae;
+      --alkali: #f5b971;
+      --alkaline: #f0d77b;
+      --nonmetal: #8bc6a2;
+      --halogen: #7db8d6;
+      --noble: #b99de0;
+      --unknown: #d8d2c6;
+      --card-shadow: 0 12px 35px rgba(34, 35, 38, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(191, 91, 4, 0.15), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(125, 184, 214, 0.18), transparent 26%),
+        linear-gradient(180deg, #f8f2e8, #eee6d5);
+      min-height: 100vh;
+    }
+
+    .page {
+      width: min(1380px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 24px 0 32px;
+    }
+
+    .hero {
+      background: rgba(255, 250, 240, 0.92);
+      border: 1px solid rgba(216, 201, 174, 0.8);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      margin: 0 0 12px;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      line-height: 1.05;
+      letter-spacing: 0.03em;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 900px;
+      font-size: 1.05rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.65fr) minmax(320px, 0.9fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: rgba(255, 250, 240, 0.94);
+      border: 1px solid rgba(216, 201, 174, 0.85);
+      border-radius: 24px;
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 18px 22px 10px;
+    }
+
+    .panel-header h2,
+    .panel-header h3 {
+      margin: 0 0 6px;
+      font-size: 1.35rem;
+    }
+
+    .panel-header p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .table-wrap {
+      padding: 8px 18px 24px;
+      overflow-x: auto;
+    }
+
+    .periodic-table {
+      display: grid;
+      grid-template-columns: 64px repeat(18, minmax(62px, 1fr));
+      gap: 8px;
+      min-width: 1240px;
+      align-items: stretch;
+    }
+
+    .corner,
+    .group-label,
+    .period-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 0.88rem;
+      min-height: 38px;
+    }
+
+    .group-label {
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .period-label {
+      font-weight: 700;
+    }
+
+    .element {
+      border: 1px solid rgba(29, 42, 56, 0.12);
+      border-radius: 16px;
+      min-height: 94px;
+      padding: 10px 9px 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+      position: relative;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .element:hover,
+    .element:focus-visible {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 24px rgba(0, 0, 0, 0.12);
+      border-color: rgba(29, 42, 56, 0.35);
+      outline: none;
+    }
+
+    .element.active {
+      box-shadow: 0 0 0 3px rgba(191, 91, 4, 0.3), 0 16px 28px rgba(0, 0, 0, 0.16);
+      border-color: rgba(191, 91, 4, 0.55);
+    }
+
+    .element-number {
+      font-size: 0.75rem;
+      color: rgba(29, 42, 56, 0.82);
+    }
+
+    .element-symbol {
+      font-size: 1.72rem;
+      font-weight: 700;
+      line-height: 1;
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+
+    .element-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.72rem;
+      color: rgba(29, 42, 56, 0.82);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 0 22px 22px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .legend-swatch {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1px solid rgba(29, 42, 56, 0.15);
+    }
+
+    .details {
+      padding-bottom: 18px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .details-body {
+      padding: 0 22px 8px;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .tag {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(191, 91, 4, 0.09);
+      color: var(--ink);
+      font-size: 0.84rem;
+      border: 1px solid rgba(191, 91, 4, 0.18);
+    }
+
+    .facts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .fact {
+      border: 1px solid rgba(216, 201, 174, 0.9);
+      background: rgba(255, 255, 255, 0.58);
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    .fact span {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .fact strong {
+      font-size: 1.05rem;
+    }
+
+    .section-title {
+      font-size: 1rem;
+      margin: 18px 0 10px;
+    }
+
+    .explainer {
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 0.95rem;
+      margin: 0 0 14px;
+    }
+
+    .lewis-box {
+      min-height: 220px;
+      border: 1px solid rgba(216, 201, 174, 0.9);
+      background:
+        radial-gradient(circle at center, rgba(191, 91, 4, 0.07), transparent 52%),
+        rgba(255, 255, 255, 0.62);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+      padding: 12px;
+    }
+
+    .lewis-svg,
+    .bohr-svg {
+      width: min(100%, 310px);
+      height: auto;
+      display: block;
+    }
+
+    .bohr-box {
+      min-height: 340px;
+      border: 1px solid rgba(216, 201, 174, 0.9);
+      background:
+        radial-gradient(circle at center, rgba(125, 184, 214, 0.08), transparent 58%),
+        rgba(255, 255, 255, 0.62);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+
+    .note {
+      margin: 14px 0 0;
+      padding: 12px 14px;
+      background: rgba(139, 198, 162, 0.14);
+      border: 1px solid rgba(139, 198, 162, 0.28);
+      border-radius: 14px;
+      color: var(--ink);
+      line-height: 1.55;
+      font-size: 0.92rem;
+    }
+
+    .placeholder {
+      padding: 16px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .footer {
+      margin-top: 18px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 1040px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .details {
+        position: static;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        width: min(100vw - 18px, 1380px);
+        padding-top: 14px;
+      }
+
+      .hero,
+      .panel {
+        border-radius: 18px;
+      }
+
+      .hero {
+        padding: 20px;
+      }
+
+      .panel-header,
+      .details-body,
+      .legend {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .facts {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <h1>Periodic Table Layout with Lewis Structures and Bohr Models</h1>
+      <p>
+        Select an element to compare its atomic number, group, period, Lewis symbol, and Bohr model.
+        The first 10 elements and bromine include Bohr diagrams so we can connect group number with the
+        number of valence electrons and contrast a larger atom.
+      </p>
+    </section>
+
+    <div class="grid">
+      <section class="panel">
+        <div class="panel-header">
+          <h2>General Periodic Table</h2>
+          <p>
+            The layout keeps the standard groups across the top and periods down the side. Click a tile to open
+            the Lewis structure first, then the Bohr model beneath it.
+          </p>
+        </div>
+        <div class="table-wrap">
+          <div class="periodic-table" id="periodicTable"></div>
+        </div>
+        <div class="legend" id="legend"></div>
+      </section>
+
+      <aside class="panel details">
+        <div class="panel-header">
+          <h3 id="detailsTitle">Choose an element</h3>
+          <p id="detailsSubtitle">Start with hydrogen, neon, or bromine to compare simple and larger atoms.</p>
+        </div>
+        <div class="details-body" id="detailsBody">
+          <div class="placeholder">
+            Click any visible element in the periodic table to load its information, Lewis structure, and Bohr model.
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <p class="footer">Built as a single HTML page for classroom explanation and quick demonstration.</p>
+  </div>
+
+  <script>
+    const elements = [
+      { atomicNumber: 1, symbol: "H", name: "Hydrogen", group: 1, period: 1, category: "nonmetal", valence: 1, shells: [1] },
+      { atomicNumber: 2, symbol: "He", name: "Helium", group: 18, period: 1, category: "noble", valence: 2, shells: [2] },
+      { atomicNumber: 3, symbol: "Li", name: "Lithium", group: 1, period: 2, category: "alkali", valence: 1, shells: [2, 1] },
+      { atomicNumber: 4, symbol: "Be", name: "Beryllium", group: 2, period: 2, category: "alkaline", valence: 2, shells: [2, 2] },
+      { atomicNumber: 5, symbol: "B", name: "Boron", group: 13, period: 2, category: "unknown", valence: 3, shells: [2, 3] },
+      { atomicNumber: 6, symbol: "C", name: "Carbon", group: 14, period: 2, category: "nonmetal", valence: 4, shells: [2, 4] },
+      { atomicNumber: 7, symbol: "N", name: "Nitrogen", group: 15, period: 2, category: "nonmetal", valence: 5, shells: [2, 5] },
+      { atomicNumber: 8, symbol: "O", name: "Oxygen", group: 16, period: 2, category: "nonmetal", valence: 6, shells: [2, 6] },
+      { atomicNumber: 9, symbol: "F", name: "Fluorine", group: 17, period: 2, category: "halogen", valence: 7, shells: [2, 7] },
+      { atomicNumber: 10, symbol: "Ne", name: "Neon", group: 18, period: 2, category: "noble", valence: 8, shells: [2, 8] },
+      { atomicNumber: 11, symbol: "Na", name: "Sodium", group: 1, period: 3, category: "alkali", valence: 1, shells: [2, 8, 1] },
+      { atomicNumber: 12, symbol: "Mg", name: "Magnesium", group: 2, period: 3, category: "alkaline", valence: 2, shells: [2, 8, 2] },
+      { atomicNumber: 13, symbol: "Al", name: "Aluminium", group: 13, period: 3, category: "unknown", valence: 3, shells: [2, 8, 3] },
+      { atomicNumber: 14, symbol: "Si", name: "Silicon", group: 14, period: 3, category: "unknown", valence: 4, shells: [2, 8, 4] },
+      { atomicNumber: 15, symbol: "P", name: "Phosphorus", group: 15, period: 3, category: "nonmetal", valence: 5, shells: [2, 8, 5] },
+      { atomicNumber: 16, symbol: "S", name: "Sulfur", group: 16, period: 3, category: "nonmetal", valence: 6, shells: [2, 8, 6] },
+      { atomicNumber: 17, symbol: "Cl", name: "Chlorine", group: 17, period: 3, category: "halogen", valence: 7, shells: [2, 8, 7] },
+      { atomicNumber: 18, symbol: "Ar", name: "Argon", group: 18, period: 3, category: "noble", valence: 8, shells: [2, 8, 8] },
+      { atomicNumber: 19, symbol: "K", name: "Potassium", group: 1, period: 4, category: "alkali", valence: 1, shells: [2, 8, 8, 1] },
+      { atomicNumber: 20, symbol: "Ca", name: "Calcium", group: 2, period: 4, category: "alkaline", valence: 2, shells: [2, 8, 8, 2] },
+      { atomicNumber: 35, symbol: "Br", name: "Bromine", group: 17, period: 4, category: "halogen", valence: 7, shells: [2, 8, 18, 7] }
+    ];
+
+    const categoryStyles = {
+      alkali: { label: "Alkali metal", color: "var(--alkali)" },
+      alkaline: { label: "Alkaline earth metal", color: "var(--alkaline)" },
+      nonmetal: { label: "Nonmetal", color: "var(--nonmetal)" },
+      halogen: { label: "Halogen", color: "var(--halogen)" },
+      noble: { label: "Noble gas", color: "var(--noble)" },
+      unknown: { label: "Other representative element", color: "var(--unknown)" }
+    };
+
+    const table = document.getElementById("periodicTable");
+    const legend = document.getElementById("legend");
+    const detailsTitle = document.getElementById("detailsTitle");
+    const detailsSubtitle = document.getElementById("detailsSubtitle");
+    const detailsBody = document.getElementById("detailsBody");
+    let selectedSymbol = null;
+
+    function renderLegend() {
+      Object.values(categoryStyles).forEach((entry) => {
+        const item = document.createElement("div");
+        item.className = "legend-item";
+        item.innerHTML = `
+          <span class="legend-swatch" style="background:${entry.color}"></span>
+          <span>${entry.label}</span>
+        `;
+        legend.appendChild(item);
+      });
+    }
+
+    function renderTable() {
+      table.innerHTML = "";
+
+      const corner = document.createElement("div");
+      corner.className = "corner";
+      corner.textContent = "P/G";
+      table.appendChild(corner);
+
+      for (let group = 1; group <= 18; group += 1) {
+        const label = document.createElement("div");
+        label.className = "group-label";
+        label.textContent = group;
+        table.appendChild(label);
+      }
+
+      for (let period = 1; period <= 4; period += 1) {
+        const periodCell = document.createElement("div");
+        periodCell.className = "period-label";
+        periodCell.textContent = period;
+        table.appendChild(periodCell);
+
+        for (let group = 1; group <= 18; group += 1) {
+          const element = elements.find((item) => item.period === period && item.group === group);
+          if (!element) {
+            const empty = document.createElement("div");
+            table.appendChild(empty);
+            continue;
+          }
+
+          const tile = document.createElement("button");
+          tile.type = "button";
+          tile.className = "element";
+          tile.style.background = categoryStyles[element.category].color;
+          tile.dataset.symbol = element.symbol;
+          if (selectedSymbol === element.symbol) {
+            tile.classList.add("active");
+          }
+          tile.innerHTML = `
+            <div class="element-number">${element.atomicNumber}</div>
+            <div class="element-symbol">${element.symbol}</div>
+            <div class="element-meta">
+              <span>G${element.group}</span>
+              <span>P${element.period}</span>
+            </div>
+          `;
+          tile.addEventListener("click", () => selectElement(element.symbol));
+          table.appendChild(tile);
+        }
+      }
+    }
+
+    function createLewisSVG(element) {
+      const positions = [
+        { x: 155, y: 32 },
+        { x: 198, y: 72 },
+        { x: 198, y: 130 },
+        { x: 155, y: 170 },
+        { x: 112, y: 130 },
+        { x: 112, y: 72 },
+        { x: 132, y: 50 },
+        { x: 178, y: 152 }
+      ];
+
+      const dots = positions.slice(0, element.valence).map((pos) => `
+        <circle cx="${pos.x}" cy="${pos.y}" r="8" fill="#bf5b04"></circle>
+      `).join("");
+
+      return `
+        <svg class="lewis-svg" viewBox="0 0 310 210" role="img" aria-label="Lewis structure for ${element.name}">
+          <rect x="20" y="20" width="270" height="170" rx="22" fill="rgba(255,250,240,0.72)" stroke="rgba(29,42,56,0.12)"></rect>
+          ${dots}
+          <text x="155" y="118" text-anchor="middle" font-size="58" font-family="Georgia, serif" font-weight="700" fill="#1d2a38">${element.symbol}</text>
+        </svg>
+      `;
+    }
+
+    function createBohrSVG(element) {
+      const centerX = 180;
+      const centerY = 180;
+      const shellSpacing = 34;
+      const maxShells = Math.max(element.shells.length, 2);
+      let shellMarkup = "";
+      let electronMarkup = "";
+
+      element.shells.forEach((count, shellIndex) => {
+        const radius = 48 + shellIndex * shellSpacing;
+        shellMarkup += `<circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="none" stroke="rgba(29,42,56,0.22)" stroke-width="2"></circle>`;
+
+        for (let i = 0; i < count; i += 1) {
+          const angle = ((Math.PI * 2) / count) * i - Math.PI / 2;
+          const x = centerX + Math.cos(angle) * radius;
+          const y = centerY + Math.sin(angle) * radius;
+          electronMarkup += `<circle cx="${x}" cy="${y}" r="6.5" fill="#2f6f8f"></circle>`;
+        }
+      });
+
+      const canvasSize = 360 + (maxShells - 2) * 22;
+      const nucleusProtons = element.atomicNumber;
+      const nucleusNeutrons = Math.max(element.atomicNumber, 1);
+
+      return `
+        <svg class="bohr-svg" viewBox="0 0 ${canvasSize} ${canvasSize}" role="img" aria-label="Bohr model for ${element.name}">
+          <circle cx="${centerX}" cy="${centerY}" r="26" fill="#bf5b04" opacity="0.95"></circle>
+          <circle cx="${centerX}" cy="${centerY}" r="16" fill="#f7dfc2" opacity="0.85"></circle>
+          ${shellMarkup}
+          ${electronMarkup}
+          <text x="${centerX}" y="${centerY - 4}" text-anchor="middle" font-size="11" font-family="Georgia, serif" fill="#1d2a38">p = ${nucleusProtons}</text>
+          <text x="${centerX}" y="${centerY + 10}" text-anchor="middle" font-size="11" font-family="Georgia, serif" fill="#1d2a38">n ≈ ${nucleusNeutrons}</text>
+        </svg>
+      `;
+    }
+
+    function bohrAvailabilityText(element) {
+      if (element.atomicNumber <= 10 || element.symbol === "Br") {
+        return `${element.name} is included in the Bohr-model set for this activity.`;
+      }
+      return `This page keeps the Bohr model focused on the first 10 elements and bromine, so ${element.name} is shown here mainly to preserve the general periodic-table layout.`;
+    }
+
+    function groupValenceNote(element) {
+      if (element.group >= 1 && element.group <= 2) {
+        return `For main-group elements in groups 1 and 2, the group number matches the number of valence electrons: ${element.valence}.`;
+      }
+      if (element.group >= 13 && element.group <= 18) {
+        const representativeValue = element.group - 10;
+        const specialCase = element.symbol === "He"
+          ? "Helium is a special case: it is in group 18 but has 2 valence electrons because its first shell is complete with 2."
+          : `For representative elements in groups 13 to 18, the valence count often follows group number minus 10. Here that gives ${representativeValue}, matching the Lewis dots.`;
+        return specialCase;
+      }
+      return `${element.name} helps show the position of period ${element.period} and group ${element.group} in the wider table.`;
+    }
+
+    function selectElement(symbol) {
+      const element = elements.find((item) => item.symbol === symbol);
+      if (!element) return;
+
+      selectedSymbol = symbol;
+      renderTable();
+
+      detailsTitle.textContent = `${element.name} (${element.symbol})`;
+      detailsSubtitle.textContent = `Atomic number ${element.atomicNumber} | Group ${element.group} | Period ${element.period}`;
+
+      const bohrHTML = (element.atomicNumber <= 10 || element.symbol === "Br")
+        ? createBohrSVG(element)
+        : `<div class="placeholder">${bohrAvailabilityText(element)}</div>`;
+
+      detailsBody.innerHTML = `
+        <div class="tag-row">
+          <span class="tag">${categoryStyles[element.category].label}</span>
+          <span class="tag">${element.valence} valence electron${element.valence === 1 ? "" : "s"}</span>
+          <span class="tag">${element.shells.length} shell${element.shells.length === 1 ? "" : "s"}</span>
+        </div>
+
+        <div class="facts">
+          <div class="fact">
+            <span>Atomic Number</span>
+            <strong>${element.atomicNumber}</strong>
+          </div>
+          <div class="fact">
+            <span>Electron Distribution</span>
+            <strong>${element.shells.join(" - ")}</strong>
+          </div>
+          <div class="fact">
+            <span>Group</span>
+            <strong>${element.group}</strong>
+          </div>
+          <div class="fact">
+            <span>Period</span>
+            <strong>${element.period}</strong>
+          </div>
+        </div>
+
+        <h4 class="section-title">Lewis Structure</h4>
+        <p class="explainer">
+          The Lewis symbol highlights the valence electrons first, which makes it easier to compare bonding behavior before
+          moving to the full shell arrangement in the Bohr model.
+        </p>
+        <div class="lewis-box">${createLewisSVG(element)}</div>
+
+        <h4 class="section-title">Bohr Model</h4>
+        <p class="explainer">
+          The Bohr diagram places electrons in shells around the nucleus. For this activity, detailed Bohr models are drawn for
+          the first 10 elements and for bromine as a larger comparison atom.
+        </p>
+        <div class="bohr-box">${bohrHTML}</div>
+
+        <p class="note">${groupValenceNote(element)}</p>
+      `;
+    }
+
+    renderLegend();
+    renderTable();
+    selectElement("H");
+  </script>
+</body>
+</html>
